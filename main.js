@@ -76,6 +76,7 @@ class MacroDataView extends obsidian.ItemView {
       case 'bls':   return this.fetchBLS(panel);
       case 'ism':   return this.fetchISM(panel);
       case 'local': return this.fetchLocal(panel);
+      case 'tushare': return this.fetchTushare(panel);
       default: throw new Error(`未知数据源：${panel.source}`);
     }
   }
@@ -184,6 +185,66 @@ class MacroDataView extends obsidian.ItemView {
         date:  curLine?.[dateIdx]?.trim()
       }],
       label: 'ISM / 供应管理协会'
+    };
+  }
+
+  async fetchTushare(panel) {
+    const token = this.plugin.settings.tushareApiKey;
+    if (!token) throw new Error('未配置 Tushare API Token（设置 → 宏观数据面板）');
+
+    const series = panel.series || [];
+    if (!series.length) throw new Error('tushare 数据源需要 series 配置');
+
+    const primary = series[0];
+    const apiName = primary.id;
+    const params  = panel.params || {};
+    const fields  = primary.fields || '';
+
+    const payload = {
+      api_name: apiName,
+      token: token,
+      params: params,
+      ...(fields && { fields: fields })
+    };
+
+    const r = await obsidian.requestUrl({
+      url: 'http://api.tushare.pro',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (r.status !== 200) throw new Error(`Tushare API ${r.status}`);
+
+    const result = r.json;
+    if (result.code !== 0) throw new Error(`Tushare error ${result.code}: ${result.msg}`);
+
+    const fieldList = result.data.fields;
+    const items     = result.data.items;
+    const curItem   = items[0];
+    const prevItem  = items[1];
+
+    const valueField = primary.valueField || fieldList.find(f => f !== 'stat_date') || fieldList[1];
+    const dateField  = 'stat_date';
+
+    const dateIdx  = fieldList.indexOf(dateField);
+    const valueIdx = fieldList.indexOf(valueField);
+
+    const dateStr = curItem ? String(curItem[dateIdx] || '') : '';
+    const formattedDate = dateStr.length === 8
+      ? `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}`
+      : dateStr.length === 6 ? `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}` : dateStr;
+
+    return {
+      rows: [{
+        id:    primary.id,
+        name:  primary.name || apiName,
+        unit:  primary.unit || '',
+        cur:   curItem  ? parseFloat(curItem[valueIdx])  : NaN,
+        prev:  prevItem ? parseFloat(prevItem[valueIdx]) : NaN,
+        date:  formattedDate || null
+      }],
+      label: 'Tushare / 中国宏观数据'
     };
   }
 
@@ -308,11 +369,23 @@ class MacroDataSettingTab extends obsidian.PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
+
+    new obsidian.Setting(containerEl)
+      .setName('Tushare API Token')
+      .setDesc('免费注册：https://tushare.pro 注册后获取 Token')
+      .addText(t => t
+        .setPlaceholder('你的 Tushare Token')
+        .setValue(this.plugin.settings.tushareApiKey)
+        .onChange(async v => {
+          this.plugin.settings.tushareApiKey = v.trim();
+          await this.plugin.saveSettings();
+        })
+      );
   }
 }
 
 // ── 插件主体 ──────────────────────────────────────────────────────────
-const DEFAULT_SETTINGS = { fredApiKey: '', blsApiKey: '' };
+const DEFAULT_SETTINGS = { fredApiKey: '', blsApiKey: '', tushareApiKey: '' };
 
 class MacroDataPlugin extends obsidian.Plugin {
   async onload() {
