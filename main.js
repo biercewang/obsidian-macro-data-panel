@@ -113,6 +113,11 @@ class MacroDataView extends obsidian.ItemView {
   async fetchBLS(panel) {
     const key = this.plugin.settings.blsApiKey;
     const url = 'https://api.bls.gov/publicAPI/v2/timeseries/data/';
+    const blsUnitMap = {
+      UNRATE:   '%',
+      CPIAUCSL: '指数',
+      ICSA:     '千人',
+    };
     const currentYear = new Date().getFullYear();
     const payload = {
       seriesid: panel.series.map(s => s.id),
@@ -140,7 +145,7 @@ class MacroDataView extends obsidian.ItemView {
       return {
         id:    s.id    || seriesItem.ID,
         name:  s.name  || seriesItem.ID,
-        unit:  s.unit  || '',
+        unit:  blsUnitMap[s.id] || s.unit || '',
         cur:   parseFloat(cur?.value),
         prev:  parseFloat(prev?.value),
         date:  cur ? `${cur.year}-${(cur.period || '').replace('M', '')}` : null
@@ -262,7 +267,7 @@ class MacroDataSettingTab extends obsidian.PluginSettingTab {
 }
 
 // ── 插件主体 ──────────────────────────────────────────────────────────
-const DEFAULT_SETTINGS = { fredApiKey: '' };
+const DEFAULT_SETTINGS = { fredApiKey: '', blsApiKey: '' };
 
 class MacroDataPlugin extends obsidian.Plugin {
   async onload() {
