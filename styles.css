@@ -1,0 +1,124 @@
+.macro-data-panel .view-content {
+  padding: 0;
+  overflow-y: auto;
+}
+
+.mdp-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  padding: 24px;
+  text-align: center;
+}
+
+.mdp-title {
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 10px 12px 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  letter-spacing: 0.03em;
+}
+
+.mdp-body {
+  padding: 0 0 12px;
+}
+
+.mdp-loading {
+  padding: 16px 12px;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.mdp-error {
+  padding: 12px;
+  color: var(--text-error);
+  font-size: 0.85em;
+}
+
+/* 表格 */
+.mdp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82em;
+}
+
+.mdp-table thead th {
+  padding: 6px 8px;
+  text-align: right;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--background-modifier-border);
+  font-size: 0.9em;
+}
+
+.mdp-table thead th:first-child {
+  text-align: left;
+}
+
+.mdp-table tbody tr {
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+.mdp-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.mdp-table td {
+  padding: 6px 8px;
+  text-align: right;
+  vertical-align: middle;
+}
+
+.mdp-name {
+  text-align: left !important;
+  color: var(--text-normal);
+}
+
+.mdp-cur {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.mdp-prev {
+  color: var(--text-muted);
+}
+
+.mdp-date {
+  color: var(--text-faint);
+  font-size: 0.88em;
+}
+
+.mdp-up   { color: #5cb85c; }
+.mdp-down { color: #d9534f; }
+.mdp-flat { color: var(--text-muted); }
+
+.mdp-err-cell {
+  color: var(--text-error);
+  font-size: 0.85em;
+}
+
+/* V/U 行 */
+.mdp-vu-row {
+  border-top: 1px solid var(--background-modifier-border) !important;
+}
+
+.mdp-vu-label {
+  font-weight: 600;
+}
+
+.mdp-vu-val {
+  font-weight: 600;
+  text-align: left !important;
+}
+
+/* 底部来源 */
+.mdp-footer {
+  padding: 6px 8px 0;
+  font-size: 0.75em;
+  color: var(--text-faint);
+  text-align: right;
+}
