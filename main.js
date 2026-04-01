@@ -74,6 +74,7 @@ class MacroDataView extends obsidian.ItemView {
     switch (panel.source) {
       case 'fred':  return this.fetchFRED(panel);
       case 'bls':   return this.fetchBLS(panel);
+      case 'ism':   return this.fetchISM(panel);
       case 'local': return this.fetchLocal(panel);
       default: throw new Error(`未知数据源：${panel.source}`);
     }
@@ -152,6 +153,33 @@ class MacroDataView extends obsidian.ItemView {
       };
     });
     return { rows, label: 'BLS / 美国劳工统计局' };
+  }
+
+  async fetchISM(panel) {
+    const idx = panel.series[0];
+    if (!idx) throw new Error('ISM 数据源需要 series 配置');
+    // ISM CSV 端点（示例：制造业 PMI）
+    const url = `https://api.ism.gov/indexes/${idx.id}/data?startYear=${new Date().getFullYear() - 1}&endYear=${new Date().getFullYear()}&format=csv`;
+    const r = await obsidian.requestUrl({ url, method: 'GET' });
+    const text = r.text;
+    // 解析 CSV：跳过 header 行，取最后2条数据
+    const lines = text.trim().split('\n');
+    const header = lines[0].split(',');
+    const dateIdx = header.findIndex(h => h.includes('Date') || h.includes('Period'));
+    const valueIdx = header.findIndex(h => h.includes('Index') || h.includes('Value'));
+    const rows = [];
+    for (let i = lines.length - 1; i >= Math.max(1, lines.length - 3); i--) {
+      const cols = lines[i].split(',');
+      rows.push({
+        id:    idx.id,
+        name:  idx.name || idx.id,
+        unit:  idx.unit || '%',
+        cur:   parseFloat(cols[valueIdx]),
+        prev:  null,
+        date:  cols[dateIdx]?.trim()
+      });
+    }
+    return { rows: rows.reverse(), label: 'ISM / 供应管理协会' };
   }
 
   // ── 渲染 ────────────────────────────────────────────────────────────
