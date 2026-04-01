@@ -111,6 +111,30 @@ JSON 文件格式（与缓存格式一致）：
 }
 ```
 
+### `source: bls`
+
+从 BLS（美国劳工统计局）拉取数据，API 免费（25 series/天），可配 Key 提升限额（500/天）。
+
+```yaml
+data_panel:
+  source: bls
+  cache: Glossary/data/labor-cache.json
+  series:
+    - { id: UNRATE, name: 失业率, unit: "%" }
+```
+
+### `source: ism`
+
+从 ISM（供应管理协会）拉取 PMI 数据，无需 Key。
+
+```yaml
+data_panel:
+  source: ism
+  cache: Glossary/data/ism-cache.json
+  series:
+    - { id: MANPMI, name: 制造业 PMI, unit: "%" }
+```
+
 ## 本地缓存机制
 
 - 每次成功拉取后，数据自动保存到 `cache` 指定的路径
