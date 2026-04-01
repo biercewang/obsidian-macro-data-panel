@@ -192,13 +192,15 @@ class MacroDataView extends obsidian.ItemView {
     const token = this.plugin.settings.tushareApiKey;
     if (!token) throw new Error('未配置 Tushare API Token（设置 → 宏观数据面板）');
 
-    const series = panel.series || [];
+    const series  = panel.series || [];
     if (!series.length) throw new Error('tushare 数据源需要 series 配置');
 
     const primary = series[0];
-    const apiName = primary.id;
-    const params  = panel.params || {};
-    const fields  = primary.fields || '';
+    const apiName = panel.api_name || primary.api_name || primary.id;
+    const params  = panel.params  || {};
+    const fields  = panel.fields  || primary.fields  || '';
+    const dateField = panel.date_field || primary.dateField || 'trade_date';
+    const valueField = primary.valueField || primary.value_field || 'close';
 
     const payload = {
       api_name: apiName,
@@ -207,14 +209,19 @@ class MacroDataView extends obsidian.ItemView {
       ...(fields && { fields: fields })
     };
 
-    const r = await obsidian.requestUrl({
-      url: 'http://lianghua.nanyangqiankun.top',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    let r;
+    try {
+      r = await obsidian.requestUrl({
+        url: 'http://lianghua.nanyangqiankun.top',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      throw new Error(`Tushare 网络请求失败：${e.message}`);
+    }
 
-    if (r.status !== 200) throw new Error(`Tushare API ${r.status}`);
+    if (r.status !== 200) throw new Error(`Tushare API ${r.status}（服务端不可用）`);
 
     const result = r.json;
     if (result.code !== 0) throw new Error(`Tushare error ${result.code}: ${result.msg}`);
@@ -224,27 +231,24 @@ class MacroDataView extends obsidian.ItemView {
     const curItem   = items[0];
     const prevItem  = items[1];
 
-    const valueField = primary.valueField || fieldList.find(f => f !== 'stat_date') || fieldList[1];
-    const dateField  = 'stat_date';
-
     const dateIdx  = fieldList.indexOf(dateField);
     const valueIdx = fieldList.indexOf(valueField);
 
     const dateStr = curItem ? String(curItem[dateIdx] || '') : '';
     const formattedDate = dateStr.length === 8
-      ? `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}`
+      ? `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`
       : dateStr.length === 6 ? `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}` : dateStr;
 
     return {
       rows: [{
         id:    primary.id,
-        name:  primary.name || apiName,
+        name:  primary.name || primary.id,
         unit:  primary.unit || '',
         cur:   curItem  ? parseFloat(curItem[valueIdx])  : NaN,
         prev:  prevItem ? parseFloat(prevItem[valueIdx]) : NaN,
         date:  formattedDate || null
       }],
-      label: 'Tushare / 中国宏观数据'
+      label: panel.label || `Tushare / ${apiName}`
     };
   }
 
