@@ -296,6 +296,18 @@ class MacroDataSettingTab extends obsidian.PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
+
+    new obsidian.Setting(containerEl)
+      .setName('BLS API Key（可选）')
+      .setDesc('免费申请：https://data.bls.gov/registrationEngine/（免费额度 25 series/天）')
+      .addText(t => t
+        .setPlaceholder('可选')
+        .setValue(this.plugin.settings.blsApiKey)
+        .onChange(async v => {
+          this.plugin.settings.blsApiKey = v.trim();
+          await this.plugin.saveSettings();
+        })
+      );
   }
 }
 

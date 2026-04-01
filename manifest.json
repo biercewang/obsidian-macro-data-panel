@@ -1,7 +1,7 @@
 {
   "id": "macro-data-panel",
   "name": "宏观数据面板",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "minAppVersion": "0.15.0",
   "description": "侧边栏实时展示当前笔记关联的宏观经济数据",
   "author": "Personal",
