@@ -135,6 +135,18 @@ data_panel:
     - { id: MANPMI, name: 制造业 PMI, unit: "%" }
 ```
 
+### `source: tushare`
+
+从 Tushare Pro 拉取中国宏观经济数据，需要 API Token。
+
+```yaml
+data_panel:
+  source: tushare
+  cache: Glossary/data/cn-cpi-cache.json
+  series:
+    - { id: macro_cn_cpi, name: 全国CPI, unit: "%", valueField: cpi }
+```
+
 ## 本地缓存机制
 
 - 每次成功拉取后，数据自动保存到 `cache` 指定的路径
