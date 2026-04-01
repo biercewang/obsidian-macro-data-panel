@@ -161,25 +161,30 @@ class MacroDataView extends obsidian.ItemView {
     // ISM CSV 端点（示例：制造业 PMI）
     const url = `https://api.ism.gov/indexes/${idx.id}/data?startYear=${new Date().getFullYear() - 1}&endYear=${new Date().getFullYear()}&format=csv`;
     const r = await obsidian.requestUrl({ url, method: 'GET' });
+    if (r.status !== 200) throw new Error(`ISM API ${r.status}`);
     const text = r.text;
     // 解析 CSV：跳过 header 行，取最后2条数据
     const lines = text.trim().split('\n');
     const header = lines[0].split(',');
     const dateIdx = header.findIndex(h => h.includes('Date') || h.includes('Period'));
     const valueIdx = header.findIndex(h => h.includes('Index') || h.includes('Value'));
-    const rows = [];
-    for (let i = lines.length - 1; i >= Math.max(1, lines.length - 3); i--) {
-      const cols = lines[i].split(',');
-      rows.push({
+    if (dateIdx === -1 || valueIdx === -1) {
+      throw new Error(`ISM CSV 格式异常：未找到 Date/Period 或 Index/Value 列。header: ${header.join(',')}`);
+    }
+    const dataLines = lines.slice(1);
+    const curLine = dataLines[dataLines.length - 1]?.split(',');
+    const prevLine = dataLines[dataLines.length - 2]?.split(',');
+    return {
+      rows: [{
         id:    idx.id,
         name:  idx.name || idx.id,
         unit:  idx.unit || '%',
-        cur:   parseFloat(cols[valueIdx]),
-        prev:  null,
-        date:  cols[dateIdx]?.trim()
-      });
-    }
-    return { rows: rows.reverse(), label: 'ISM / 供应管理协会' };
+        cur:   parseFloat(curLine?.[valueIdx]),
+        prev:  parseFloat(prevLine?.[valueIdx]),
+        date:  curLine?.[dateIdx]?.trim()
+      }],
+      label: 'ISM / 供应管理协会'
+    };
   }
 
   // ── 渲染 ────────────────────────────────────────────────────────────
