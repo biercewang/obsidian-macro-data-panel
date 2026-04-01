@@ -137,7 +137,9 @@ data_panel:
 
 ### `source: tushare`
 
-从 Tushare Pro 拉取中国宏观经济数据，需要 API Token。
+从 Tushare 拉取中国宏观经济数据，需要 API Token。
+
+Obsidian → 设置 → 宏观数据面板 → 填入 Tushare Token
 
 ```yaml
 data_panel:
@@ -146,6 +148,17 @@ data_panel:
   series:
     - { id: macro_cn_cpi, name: 全国CPI, unit: "%", valueField: cpi }
 ```
+
+支持的 api_name：
+
+| api_name | 数据 |
+|----------|------|
+| `macro_cn_cpi` | CPI |
+| `macro_cn_ppi` | PPI |
+| `macro_cn_gdp` | GDP |
+| `macro_cn_pmi` | 官方PMI |
+| `macro_cn_m2` | M2货币供应 |
+| `macro_cn_shipline` | 社会融资 |
 
 ## 本地缓存机制
 

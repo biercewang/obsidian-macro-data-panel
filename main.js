@@ -208,7 +208,7 @@ class MacroDataView extends obsidian.ItemView {
     };
 
     const r = await obsidian.requestUrl({
-      url: 'http://api.tushare.pro',
+      url: 'http://lianghua.nanyangqiankun.top',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -372,7 +372,7 @@ class MacroDataSettingTab extends obsidian.PluginSettingTab {
 
     new obsidian.Setting(containerEl)
       .setName('Tushare API Token')
-      .setDesc('免费注册：https://tushare.pro 注册后获取 Token')
+      .setDesc('Tushare Token（设置 → 宏观数据面板）')
       .addText(t => t
         .setPlaceholder('你的 Tushare Token')
         .setValue(this.plugin.settings.tushareApiKey)
