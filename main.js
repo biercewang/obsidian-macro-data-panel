@@ -73,6 +73,7 @@ class MacroDataView extends obsidian.ItemView {
   async fetchData(panel) {
     switch (panel.source) {
       case 'fred':  return this.fetchFRED(panel);
+      case 'bls':   return this.fetchBLS(panel);
       case 'local': return this.fetchLocal(panel);
       default: throw new Error(`未知数据源：${panel.source}`);
     }
@@ -107,6 +108,45 @@ class MacroDataView extends obsidian.ItemView {
     if (!f) throw new Error(`文件不存在：${panel.file}`);
     const raw = JSON.parse(await this.app.vault.read(f));
     return { rows: Array.isArray(raw) ? raw : raw.data, label: '本地数据库' };
+  }
+
+  async fetchBLS(panel) {
+    const key = this.plugin.settings.blsApiKey;
+    const url = 'https://api.bls.gov/publicAPI/v2/timeseries/data/';
+    const currentYear = new Date().getFullYear();
+    const payload = {
+      seriesid: panel.series.map(s => s.id),
+      startyear: String(currentYear - 1),
+      endyear:   String(currentYear),
+      ...(key && { registrationkey: key })
+    };
+    const r = await obsidian.requestUrl({
+      url,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (r.status !== 200) throw new Error(`BLS API ${r.status}`);
+    const results = r.json?.Results?.series || [];
+    const rows = results.map(seriesItem => {
+      const s = panel.series.find(x => x.id === seriesItem.ID) || {};
+      const data = seriesItem.data || [];
+      const sorted = data.sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        return (b.period || '').localeCompare(a.period || '');
+      });
+      const cur  = sorted[0];
+      const prev = sorted[1];
+      return {
+        id:    s.id    || seriesItem.ID,
+        name:  s.name  || seriesItem.ID,
+        unit:  s.unit  || '',
+        cur:   parseFloat(cur?.value),
+        prev:  parseFloat(prev?.value),
+        date:  cur ? `${cur.year}-${(cur.period || '').replace('M', '')}` : null
+      };
+    });
+    return { rows, label: 'BLS / 美国劳工统计局' };
   }
 
   // ── 渲染 ────────────────────────────────────────────────────────────
